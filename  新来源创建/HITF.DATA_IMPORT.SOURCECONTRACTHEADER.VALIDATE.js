@@ -22,21 +22,23 @@ function process(input) {
     try {
         // 获取当前上下文的tenantId
         let tenantId = CORE.CurrentContext.getTenantId();
-        let { result: data } = input;
-        let { data: successArr } = data;
+
+        BASE.Logger.info("新来源合同创建（带含义字段）-校验脚本,租户ID{} ,输入参数input为{}", tenantId, JSON.stringify(input));
+
+        let { result: { data = {} } } = input;
         BASE.Logger.info("新来源合同创建（带含义字段）-校验脚本,租户ID{} ,输入参数为{}", tenantId, JSON.stringify(data));
 
         let newErrorArr = [];
         let newSuccessArr = [];
 
         // 多条数据循环处理
-        data.forEach((item, index, arr) => {
+        data.successArr.forEach((item, index, arr) => {
             item.oldId = item.id;
             item.oldObjectVersionNumber = item.objectVersionNumber;
             try {
                 // 做必输字段的校验
                 checkValid(item);
-                checkDataExists(item);
+                checkDataExists(item, tenantId);
                 newSuccessArr.push(item);
             } catch (e) {
                 item.syncStatus = 'ERROR';
@@ -51,23 +53,23 @@ function process(input) {
 
         // 回写校验失败的数据
         if (newErrorArr.length > 0) {
-            H0.ModelerHelper.batchUpdateByPrimaryKey(objectCode, tenantId, errorArr, true);
+            H0.ModelerHelper.batchUpdateByPrimaryKey('HITF_SOURCE_CONTRACT_HEADER', tenantId, newErrorArr, true);
         }
 
-        // 此处校验成功后，接口表的数据就算车处理成功，回写状态
-        if (newSuccessArr.length > 0) {
-            newSuccessArr.forEach((item, index, arr) => {
-                item.syncStatus = "SUCCESS";
-            });
-            H0.ModelerHelper.batchUpdateByPrimaryKey(objectCode, tenantId, newSuccessArr, true);
-        }
+        // // 此处校验成功后，接口表的数据就算车处理成功，回写状态
+        // if (newSuccessArr.length > 0) {
+        //     newSuccessArr.forEach((item, index, arr) => {
+        //         item.syncStatus = "SUCCESS";
+        //     });
+        //     H0.ModelerHelper.batchUpdateByPrimaryKey('HITF_SOURCE_CONTRACT_HEADER', tenantId, newSuccessArr, true);
+        // }
 
         BASE.Logger.info("9. 多维度来源合同-校验-校验数据处理完成");
         let response = new CommonResponse(newErrorArr, newSuccessArr);
-        return OC.CommonResult.Interface.custom('200', '处理成功', response);
+        return OC.CommonResult.Biz.custom('200', '处理成功', response);
     } catch (e1) {
-        BASE.Logger.info("新来源合同创建（带含义字段）-校验脚本存在异常", e1.message);
-        return OC.CommonResult.Interface.custom('fail', '处理失败', null);
+        BASE.Logger.info("新来源合同创建（带含义字段）-校验脚本存在异常{}", e1.message);
+        return OC.CommonResult.Biz.custom('fail', '处理失败', null);
     }
 }
 
@@ -76,7 +78,7 @@ function process(input) {
  * 校验当前的数据是否已经存在处理成功的数据
  * @param {输入参数} item 
  */
-function checkDataExists(item) {
+function checkDataExists(item, tenantId) {
     // 查询是否存在处理成功的数据
     let queryParamMap = {
         'sourceSystem': item.sourceSystem,
