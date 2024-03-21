@@ -41,7 +41,7 @@ function process(input) {
 
         // 通过接口的ID将接口的表originData,存储到各个临时表
         const serverId = "oc-base";
-        const path = "/v1/" + tenantId + "/sourceContract/hcbm/mutil/batchInsert";
+        const path = "/v1/" + tenantId + "/source-contract-headers/batch/insert_to_temp";
         let res = BASE.FeignClient.selectClient(serverId).doPost(path, JSON.stringify(paramData));
         BASE.Logger.info("新来源合同创建（带含义字段）-写入脚本-数据保存到正式表结果：{}", res);
 
@@ -89,7 +89,7 @@ function process(input) {
             // 基于需要自动创建的数据进行接口调用：处理自动创建合同
             let asyncAutoCreateParam = willAutoCreateArr.map(obj => { return obj.id });
             const afterServerId = "oc-base";
-            const afterPath = "/v1/" + CORE.CurrentContext.getTenantId() + "/sourceContract/mutil/auto/create-async";
+            const afterPath = "/v1/" + CORE.CurrentContext.getTenantId() + "/source-contract-headers/auto/create-async";
             // 将处理成功的数据进行自动创建逻辑
             let afterRes = BASE.FeignClient.selectClient(afterServerId).doPost(afterPath, JSON.stringify(asyncAutoCreateParam));
             BASE.Logger.info("新来源合同创建（带含义字段）-写入脚本  res {}", afterRes);
