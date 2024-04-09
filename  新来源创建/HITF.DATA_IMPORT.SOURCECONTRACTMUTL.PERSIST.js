@@ -77,7 +77,7 @@ function process(input) {
         }
 
         if (newSuccessArr.length > 0) {
-            BASE.Logger.info("新来源合同创建（带含义字段）-写入脚本-数据保存到正式表成功即将处理自动创建：{}", res);
+            BASE.Logger.info("新来源合同创建（带含义字段）-写入脚本-数据保存到正式表成功即将处理自动创建：{}", newSuccessArr);
             let willAutoCreateArr = [];
 
             // 获取需要自动创建的数据
@@ -86,18 +86,22 @@ function process(input) {
                     willAutoCreateArr.push(item);
                 }
             });
-            // 基于需要自动创建的数据进行接口调用：处理自动创建合同
-            let asyncAutoCreateParam = willAutoCreateArr.map(obj => { return obj.id });
-            const afterServerId = "oc-base";
-            const afterPath = "/v1/" + CORE.CurrentContext.getTenantId() + "/source-contract-headers/auto/create-async";
-            // 将处理成功的数据进行自动创建逻辑
-            let afterRes = BASE.FeignClient.selectClient(afterServerId).doPost(afterPath, JSON.stringify(asyncAutoCreateParam));
-            BASE.Logger.info("新来源合同创建（带含义字段）-写入脚本  res {}", afterRes);
-            afterRes = JSON.parse(afterRes);
-            BASE.Logger.info("新来源合同创建（带含义字段）-写入脚本： {}", !afterRes.failed);
-            if (afterRes.failed) {
-                newErrorArr = newErrorArr.concat(newSuccessArr);
-                newSuccessArr = [];
+
+            BASE.Logger.info("新来源合同创建（带含义字段）-写入脚本-数据保存到正式表成功即将处理自动创建：{}", JSON.stringify(willAutoCreateArr));
+            if (willAutoCreateArr.length > 0) {
+                // 基于需要自动创建的数据进行接口调用：处理自动创建合同
+                let asyncAutoCreateParam = willAutoCreateArr.map(obj => { return obj.id });
+                const afterServerId = "oc-base";
+                const afterPath = "/v1/" + CORE.CurrentContext.getTenantId() + "/source-contract-headers/auto/create-async";
+                // 将处理成功的数据进行自动创建逻辑
+                let afterRes = BASE.FeignClient.selectClient(afterServerId).doPost(afterPath, JSON.stringify(asyncAutoCreateParam));
+                BASE.Logger.info("新来源合同创建（带含义字段）-写入脚本  res {}", afterRes);
+                afterRes = JSON.parse(afterRes);
+                BASE.Logger.info("新来源合同创建（带含义字段）-写入脚本： {}", !afterRes.failed);
+                if (afterRes.failed) {
+                    newErrorArr = newErrorArr.concat(newSuccessArr);
+                    newSuccessArr = [];
+                }
             }
         }
 
