@@ -97,7 +97,7 @@ function checkDataExists(item, tenantId) {
 
     BASE.Logger.info("新来源合同创建（带含义字段）-校验脚本-数据库查询结果{},{}", JSON.stringify(sourceContract), typeof sourceContract);
     if (sourceContract && sourceContract.length > 0) {
-        throw new CommonException("20001", "[" + item.sourceCode + "]数据已经存在");
+        throw new CommonException("500002", "[" + item.sourceCode + "]数据已经存在");
     }
 }
 
@@ -111,19 +111,19 @@ function checkValid(data) {
     let { type, sourceCode, sourceSystem, originData } = data;
     // 必输字段的校验
     if (type === '' || type === null || type === undefined) {
-        throw new CommonException("20000", "必输字段单据类型不能为空")
+        throw new CommonException("500001", "必输字段单据类型不能为空")
     }
 
 
     if (sourceCode === '' || sourceCode === null || sourceCode === undefined) {
-        throw new CommonException("20000", "必输字段单据编码不能为空")
+        throw new CommonException("500001", "必输字段单据编码不能为空")
     }
 
     if (sourceSystem === '' || sourceSystem === null || sourceSystem === undefined) {
-        throw new CommonException("20000", "必输字段来源系统不能为空")
+        throw new CommonException("500001", "必输字段来源系统不能为空")
     }
 
     if (originData === '' || originData === null || originData === undefined) {
-        throw new CommonException("20000", "必输字段参数内容不能为空")
+        throw new CommonException("500001", "必输字段参数内容不能为空")
     }
 }

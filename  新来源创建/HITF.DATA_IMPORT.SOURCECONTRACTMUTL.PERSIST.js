@@ -17,7 +17,7 @@ function batchUpdateByPrimaryKey(waitHandlerDatas, modelCode, tenantId) {
         H0.ModelerHelper.batchUpdateByPrimaryKey(modelCode, tenantId, waitHandlerDatas, true);
     } catch (e) {
         BASE.Logger.info("新来源合同创建（带含义字段）-写入脚本存在异常0000000 {}{}", e instanceof Error, JSON.stringify(e));
-        throw new CommonException("20008", '保存到中间表失败');
+        throw new CommonException("100240", '数据库操作失败，请重试');
     }
 }
 
@@ -28,7 +28,7 @@ function process(input) {
     BASE.Logger.info("新来源合同创建（带含义字段）-写入脚本,租户ID{} ,输入参数为{}", tenantId, JSON.stringify(data));
 
     if (input.result.errcode === 'fail') {
-        return OC.CommonResult.Interface.custom('500', '系统异常', null);
+        return OC.CommonResult.Interface.custom('100000', '系统异常', null);
     }
 
     try {
@@ -123,11 +123,11 @@ function process(input) {
         BASE.Logger.info("新来源合同创建（带含义字段）-写入脚本:{}", JSON.stringify(response));
 
         if (newErrorArr.length > 0 && newSuccessArr.length == 0) {
-            return OC.CommonResult.Biz.custom('20010', '所有数据处理失败', response);
+            return OC.CommonResult.Biz.custom('100270', '所有数据处理失败', response);
         } else if (newErrorArr.length > 0 && newSuccessArr.length > 0) {
-            return OC.CommonResult.Biz.custom('20009', '部分数据处理成功', response);
+            return OC.CommonResult.Biz.custom('100260', '部分数据处理成功', response);
         } else {
-            return OC.CommonResult.Biz.custom('00000', '所有数据处理成功', response);
+            return OC.CommonResult.Biz.custom('0', '所有数据处理成功', response);
         }
     } catch (e1) {
         BASE.Logger.info("新来源合同创建（带含义字段）-写入脚本存在异常 {}", e1);
@@ -135,7 +135,7 @@ function process(input) {
         if (e1 instanceof CommonException) {
             return OC.CommonResult.Biz.custom(e1.name, e1.message, null);
         } else {
-            return OC.CommonResult.Biz.custom('500', '系统异常', null);
+            return OC.CommonResult.Biz.custom('100000', '系统异常', null);
         }
     }
 }
