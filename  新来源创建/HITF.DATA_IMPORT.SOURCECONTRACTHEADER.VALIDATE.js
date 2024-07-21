@@ -36,7 +36,7 @@ function process(input) {
             item.oldId = item.id;
             item.oldObjectVersionNumber = item.objectVersionNumber;
 
-            BASE.Logger.info("新来源合同创建（带含义字段）-校验脚本,-------updateNewContract {}", item.updateNewContract);
+            BASE.Logger.info("新来源合同创建（带含义字段）-校验脚本,-------reCreateNewContract {}", item.reCreateNewContract);
 
             try {
                 // 做必输字段的校验
@@ -105,7 +105,7 @@ function checkDataExists(item, tenantId) {
         const existContract = findCreatedContract(sourceContract[0]);
         BASE.Logger.info("新来源合同创建（带含义字段）-校验脚本-数据库查询结果{}", JSON.stringify(existContract));
 
-        if (item.updateNewContract && existContract && existContract.statusCode === 'N') {
+        if (item.reCreateNewContract && existContract && existContract.statusCode === 'N') {
             // 删除原合同数据
             deleteContract(existContract);
         } else if (existContract.statusCode !== 'N') {
