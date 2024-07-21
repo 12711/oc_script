@@ -35,6 +35,9 @@ function process(input) {
         data.successArr.forEach((item, index, arr) => {
             item.oldId = item.id;
             item.oldObjectVersionNumber = item.objectVersionNumber;
+
+            BASE.Logger.info("新来源合同创建（带含义字段）-校验脚本,-------updateNewContract {}", item.updateNewContract);
+
             try {
                 // 做必输字段的校验
                 checkValid(item);
@@ -96,9 +99,77 @@ function checkDataExists(item, tenantId) {
     const sourceContract = H0.SqlHelper.selectList('oc-base', sql, queryParamMap);
 
     BASE.Logger.info("新来源合同创建（带含义字段）-校验脚本-数据库查询结果{},{}", JSON.stringify(sourceContract), typeof sourceContract);
+
     if (sourceContract && sourceContract.length > 0) {
-        throw new CommonException("500002", "[" + item.sourceCode + "]数据已经存在");
+        // 判断已经创建的合同状态是否为草稿状态
+        const existContract = findCreatedContract(sourceContract[0]);
+        BASE.Logger.info("新来源合同创建（带含义字段）-校验脚本-数据库查询结果{}", JSON.stringify(existContract));
+
+        if (item.updateNewContract && existContract && existContract.statusCode === 'N') {
+            // 删除原合同数据
+            deleteContract(existContract);
+        } else if (existContract.statusCode !== 'N') {
+            throw new CommonException("500003", "[" + item.sourceCode + "]来源单数据已经创建了非草稿状态的合同, 需要下作废已存在合同再来源创建");
+        } else {
+            throw new CommonException("500002", "[" + item.sourceCode + "]来源单数据已经存在");
+        }
+
     }
+}
+
+/**
+ * 删除已经存在的合同
+ * @param {已经存在的合同} existContract 
+ */
+function deleteContract(existContract) {
+    let serverId = "oc-base";
+    const path = "/v1/" + existContract.tenantId + "/contracts/batch/for-script";
+    let paramData = { "contractUniqueType": "CONTRACT_SERIAL_NUMBER", };
+    paramData.contractUniqueType = 'CONTRACT_SERIAL_NUMBER';
+    paramData.userIdType = 'USERID';
+    paramData.userId = existContract.createdBy;
+    paramData.contractUniqueKeys = [existContract.contractSerialNumber];
+
+    BASE.Logger.info("新来源合同创建（带含义字段）-校验脚本-删除已存在的合同参数{}", JSON.stringify(paramData));
+    let res = BASE.FeignClient.selectClient(serverId).doPut(path, JSON.stringify(paramData));
+    BASE.Logger.info("新来源合同创建（带含义字段）-校验脚本-删除已存在的合同结果{}", JSON.stringify(res));
+    if (res != null && res.failed) {
+        throw new CommonException(res.code, res.message)
+    }
+}
+
+
+/**
+ * 
+ * @returns 查询已经创建的合同
+ */
+function findCreatedContract(item) {
+    let sql = "select * from hcbm_contract where other_source_receipt = #{sourceCode} and source_system = #{sourceSystem} and tenant_id = #{tenantId}"
+
+
+    // 查询是否存在处理成功的数据
+    let queryParamMap = {
+        'sourceSystem': item.sourceSystem,
+        'sourceCode': item.sourceCode,
+        'tenantId': item.tenantId,
+        '@permissionClose': true
+    };
+
+    if (!item.sourceSystem) {
+        return null;
+    }
+    if (!item.sourceSystem) {
+        return null;
+    }
+
+    // 获取查询参数,校验如果相同的来源系统、单据号、行单据号是唯一的，如果存在将跳过处理
+    const hasCreatedContract = H0.SqlHelper.selectList('oc-base', sql, queryParamMap);
+    if (hasCreatedContract.length >= 1) {
+        return hasCreatedContract[0];
+    }
+
+    return null;
+
 }
 
 
