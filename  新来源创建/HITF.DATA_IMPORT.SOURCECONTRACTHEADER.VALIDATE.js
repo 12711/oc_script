@@ -144,8 +144,7 @@ function deleteContract(existContract) {
  * @returns 查询已经创建的合同
  */
 function findCreatedContract(item) {
-    let sql = "select * from hcbm_contract where other_source_receipt = #{sourceCode} and source_system = #{sourceSystem} and tenant_id = #{tenantId}"
-
+    let sql = "select * from hcbm_contract where status_code not in('DELETED','O')  and other_source_receipt = #{sourceCode} and source_system = #{sourceSystem} and tenant_id = #{tenantId} and latest = 1"
 
     // 查询是否存在处理成功的数据
     let queryParamMap = {
