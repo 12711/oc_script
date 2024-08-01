@@ -109,7 +109,7 @@ function checkDataExists(item, tenantId) {
             // 删除原合同数据
             deleteContract(existContract);
         } else if (existContract.statusCode !== 'N') {
-            throw new CommonException("500003", "[" + item.sourceCode + "]来源单数据已经创建了非草稿状态的合同, 需要下作废已存在合同再来源创建");
+            throw new CommonException("500003", "[" + item.sourceCode + "]来源单数据已经创建了非草稿状态的合同, 需要先作废已存在合同再来源创建");
         } else {
             throw new CommonException("500002", "[" + item.sourceCode + "]来源单数据已经存在");
         }
